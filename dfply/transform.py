@@ -59,6 +59,39 @@ def mutate_if(df, predicate, fun):
     return df
 
 
+@dfpipe
+def mutate_all(df, *functions):
+    """
+    Apply functions to all columns, assigning them to a new column withe the
+    function name appended.
+
+    Args:
+        df (pandas.DataFrame): data passed through in the pipe.
+        *functions: an arbitrary list / amount of functions to apply.
+
+    Returns:
+        pandas.DataFrame
+
+    Example:
+        (diamonds
+         >> select('carat', 'price')
+         >> mutate_all(np.sqrt, np.square)
+         >> head())
+
+         carat  price   carat_sqrt  carat_square  price_sqrt  price_square
+         0.23    326    0.479583    0.0529   18.055470        106276
+         0.21    326    0.458258    0.0441   18.055470        106276
+         0.23    327    0.479583    0.0529   18.083141        106929
+         0.29    334    0.538516    0.0841   18.275667        111556
+         0.31    335    0.556776    0.0961   18.303005        112225
+    """
+    assignments = {
+        colname + '_' + f.__name__: f(df[colname])
+        for colname in df.columns
+        for f in functions
+    }
+    return df.assign(**assignments)
+
 
 @dfpipe
 def transmute(df, *keep_columns, **kwargs):
